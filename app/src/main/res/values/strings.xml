@@ -14,8 +14,8 @@
     <string name="status_service_stopped">背景服務：未啟動</string>
 
     <string name="section_calibration">2. 校準（在遊戲畫面上框選/點選位置）</string>
-    <string name="btn_start_calibration">開始校準精靈</string>
-    <string name="calibration_hint">校準前請先切到遊戲畫面，服務啟動後懸浮控制面板會出現在畫面上，點擊「校準」即可開始。</string>
+    <string name="btn_start_calibration">開啟校準選單</string>
+    <string name="calibration_hint">服務啟動後懸浮控制面板會出現在畫面上。點擊「校準」會打開一個項目選單，7 個項目可以分開、任意順序校準：先在遊戲裡正常操作切到需要的畫面（例如打一場戰鬥），再點選單裡對應的項目框選/點選一次即可，不需要一次做完。</string>
 
     <string name="section_thresholds">3. 閾值設定</string>
     <string name="label_tick_interval">偵測間隔（毫秒）：%1$d</string>
@@ -39,15 +39,26 @@
     <string name="overlay_close">關閉</string>
     <string name="overlay_status_idle">閒置</string>
 
-    <string name="calib_step_spawn_area">步驟 1／7：在主畫面上，拖曳框選怪物出現的區域（畫面中央那個橢圓範圍），盡量框選怪物較少或沒有怪物的時候</string>
-    <string name="calib_step_map_anchor">步驟 2／7：框選主畫面上一個「只有在主畫面才會出現」的固定小區域（例如左上角圖示），用來判斷目前是否在主畫面</string>
-    <string name="calib_step_battle_anchor">步驟 3／7：進入戰鬥畫面後，框選一個「只有在戰鬥畫面才會出現」的固定小區域（例如背景地形或角色狀態列附近），用來判斷目前是否在戰鬥中</string>
-    <string name="calib_step_confirm_button">步驟 4／7：點選怪物後會出現確認介面，請點一下綠色「戰鬥」按鈕的位置</string>
-    <string name="calib_step_battle_slot">步驟 5／7：進入戰鬥畫面後，點一下下方六個欄位中「左上」那一格的位置</string>
-    <string name="calib_step_continue_button">步驟 6／7：戰鬥結束後的結算畫面，請點一下綠色「繼續」按鈕的位置</string>
-    <string name="calib_step_items_button">步驟 7／7：回到主畫面，點一下下方「物品」按鈕的位置（用於自動長按 3 秒回復狀態）</string>
-    <string name="calib_btn_skip">跳過</string>
-    <string name="calib_btn_cancel">取消校準</string>
-    <string name="calib_toast_done">校準完成，設定已儲存</string>
-    <string name="calib_toast_cancelled">已取消校準</string>
+    <string name="calib_step_spawn_area">在主畫面上，拖曳框選怪物出現的區域（畫面中央那個橢圓範圍），盡量在怪物較少或沒有怪物時框選</string>
+    <string name="calib_step_map_anchor">框選主畫面上一個「只有在主畫面才會出現」的固定小區域（例如左上角圖示），用來判斷目前是否在主畫面</string>
+    <string name="calib_step_battle_anchor">框選一個「只有在戰鬥畫面才會出現」的固定小區域（例如背景地形或角色狀態列附近），用來判斷目前是否在戰鬥中；請先在遊戲裡手動切到戰鬥畫面再框選</string>
+    <string name="calib_step_confirm_button">點一下綠色「戰鬥」確認按鈕的位置；請先在遊戲裡手動點怪物切到確認介面再點</string>
+    <string name="calib_step_battle_slot">點一下戰鬥畫面下方六個欄位中「左上」那一格的位置；請先在遊戲裡手動切到戰鬥畫面再點</string>
+    <string name="calib_step_continue_button">點一下結算畫面上綠色「繼續」按鈕的位置；請先在遊戲裡手動打完一場戰鬥切到結算畫面再點</string>
+    <string name="calib_step_items_button">點一下主畫面下方「物品」按鈕的位置（用於自動長按 3 秒回復狀態）</string>
+    <string name="calib_btn_cancel">取消</string>
+    <string name="calib_toast_cancelled">已取消，未儲存這一項</string>
+    <string name="calib_toast_step_saved">已更新：%1$s</string>
+
+    <string name="calib_menu_title">選擇要校準的項目（可在遊戲中切換畫面後再點選）</string>
+    <string name="calib_menu_item_spawn_area">怪物範圍</string>
+    <string name="calib_menu_item_map_anchor">地圖錨點</string>
+    <string name="calib_menu_item_battle_anchor">戰鬥錨點</string>
+    <string name="calib_menu_item_confirm_button">戰鬥確認鈕</string>
+    <string name="calib_menu_item_battle_slot">戰鬥攻擊格</string>
+    <string name="calib_menu_item_continue_button">結算繼續鈕</string>
+    <string name="calib_menu_item_items_button">物品鈕</string>
+    <string name="calib_menu_close">關閉選單</string>
+    <string name="calib_status_done">（已校準）</string>
+    <string name="calib_status_missing">（未校準）</string>
 </resources>

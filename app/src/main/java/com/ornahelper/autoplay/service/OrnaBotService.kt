@@ -28,6 +28,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
@@ -45,7 +46,7 @@ import com.ornahelper.autoplay.ui.CalibrationOverlayView
 /**
  * The single foreground service that owns everything the bot needs at runtime:
  * screen capture (MediaProjection), the floating control panel, the calibration
- * wizard overlay, and the [BotEngine] loop itself. Kept as one service so these
+ * menu/overlay, and the [BotEngine] loop itself. Kept as one service so these
  * pieces can share state directly instead of coordinating over IPC.
  */
 class OrnaBotService : Service() {
@@ -74,9 +75,8 @@ class OrnaBotService : Service() {
     private var calibrationRootView: View? = null
     private var calibrationOverlayView: CalibrationOverlayView? = null
     private var calibrationInstructionText: TextView? = null
-    private var workingConfig: BotConfig = BotConfig()
-    private var calibrationIndex = 0
-    private val calibrationSteps = CalibrationStep.values().toList()
+
+    private var calibrationMenuView: View? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -109,7 +109,7 @@ class OrnaBotService : Service() {
             }
             ACTION_SHOW_CALIBRATION -> {
                 startForegroundNotification()
-                showCalibrationOverlay()
+                showCalibrationMenu()
             }
             ACTION_STOP -> stopSelf()
         }
@@ -123,6 +123,7 @@ class OrnaBotService : Service() {
         isServiceRunning = false
         botEngine.stop()
         removeCalibrationOverlay()
+        removeCalibrationMenu()
         controlView?.let { runCatching { windowManager.removeView(it) } }
         controlView = null
         tearDownProjection()
@@ -224,7 +225,9 @@ class OrnaBotService : Service() {
 
         handle.setOnTouchListener(dragListener(params, view))
         overlayToggleButton?.setOnClickListener { toggleBot() }
-        btnCalibrate.setOnClickListener { showCalibrationOverlay() }
+        btnCalibrate.setOnClickListener {
+            if (calibrationMenuView != null) removeCalibrationMenu() else showCalibrationMenu()
+        }
         btnClose.setOnClickListener { stopSelf() }
 
         windowManager.addView(view, params)
@@ -274,47 +277,109 @@ class OrnaBotService : Service() {
         updateToggleButtonLabel()
     }
 
-    // ---- Calibration wizard ----------------------------------------------------------------
+    // ---- Calibration menu -------------------------------------------------------------------
+    //
+    // Calibration is 7 independent, on-demand items rather than one linear wizard: the menu
+    // itself is a small floating panel (like the control panel) that never blocks touches to
+    // the game underneath, so the player can freely navigate to whatever screen a given item
+    // needs (e.g. actually fight a monster to reach the battle screen) before tapping that
+    // item. Only the brief single-gesture capture that follows tapping an item briefly covers
+    // the full screen, and it closes itself the instant that one region/point is captured.
 
-    private fun showCalibrationOverlay() {
+    private fun showCalibrationMenu() {
+        if (calibrationMenuView != null) return
+        if (mediaProjection == null) {
+            Toast.makeText(this, "請先在主畫面授權畫面擷取", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val root = LayoutInflater.from(this).inflate(R.layout.overlay_calibration_menu, null)
+        calibrationMenuView = root
+
+        val itemsContainer = root.findViewById<LinearLayout>(R.id.calib_menu_items)
+        val btnClose = root.findViewById<Button>(R.id.calib_menu_btn_close)
+        rebuildCalibrationMenuItems(itemsContainer)
+        btnClose.setOnClickListener { removeCalibrationMenu() }
+
+        val params = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            PixelFormat.TRANSLUCENT
+        ).apply {
+            gravity = Gravity.TOP or Gravity.START
+            x = 20
+            y = 220
+        }
+        windowManager.addView(root, params)
+    }
+
+    private fun rebuildCalibrationMenuItems(container: LinearLayout) {
+        container.removeAllViews()
+        val cfg = configRepository.load()
+        for (step in CalibrationStep.values()) {
+            val button = Button(this).apply {
+                minHeight = 0
+                minimumHeight = 0
+                textSize = 11f
+                setPadding(12, 8, 12, 8)
+                text = menuLabelFor(step, cfg)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { topMargin = 4 }
+                setOnClickListener { startSingleStepCalibration(step) }
+            }
+            container.addView(button)
+        }
+    }
+
+    private fun removeCalibrationMenu() {
+        val root = calibrationMenuView ?: return
+        runCatching { windowManager.removeView(root) }
+        calibrationMenuView = null
+    }
+
+    private fun startSingleStepCalibration(step: CalibrationStep) {
         if (calibrationRootView != null) return
         if (mediaProjection == null) {
             Toast.makeText(this, "請先在主畫面授權畫面擷取", Toast.LENGTH_SHORT).show()
             return
         }
-        workingConfig = configRepository.load()
-        calibrationIndex = 0
 
         val root = LayoutInflater.from(this).inflate(R.layout.overlay_calibration, null)
         calibrationRootView = root
 
         val canvas = root.findViewById<CalibrationOverlayView>(R.id.calibration_canvas)
         val instruction = root.findViewById<TextView>(R.id.calibration_instruction)
-        val btnSkip = root.findViewById<Button>(R.id.calibration_btn_skip)
         val btnCancel = root.findViewById<Button>(R.id.calibration_btn_cancel)
         calibrationOverlayView = canvas
         calibrationInstructionText = instruction
 
         canvas.frameProvider = { synchronized(bitmapLock) { latestBitmap } }
+        canvas.currentStep = step
         canvas.listener = object : CalibrationOverlayView.Listener {
             override fun onRegionCaptured(region: CalibratedRegion) {
-                applyCalibrationRegion(calibrationSteps[calibrationIndex], region)
-                advanceCalibrationStep()
+                val cfg = configRepository.load()
+                applyCalibrationRegion(cfg, step, region)
+                configRepository.save(cfg)
+                finishSingleStepCalibration(step)
             }
 
             override fun onButtonCaptured(button: CalibratedButton) {
-                applyCalibrationButton(calibrationSteps[calibrationIndex], button)
-                advanceCalibrationStep()
+                val cfg = configRepository.load()
+                applyCalibrationButton(cfg, step, button)
+                configRepository.save(cfg)
+                finishSingleStepCalibration(step)
             }
         }
 
-        btnSkip.setOnClickListener { advanceCalibrationStep() }
+        instruction.text = instructionFor(step)
         btnCancel.setOnClickListener {
             removeCalibrationOverlay()
             Toast.makeText(this, getString(R.string.calib_toast_cancelled), Toast.LENGTH_SHORT).show()
         }
-
-        updateCalibrationStepUi()
 
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
@@ -326,39 +391,28 @@ class OrnaBotService : Service() {
         windowManager.addView(root, params)
     }
 
-    private fun applyCalibrationRegion(step: CalibrationStep, region: CalibratedRegion) {
+    private fun finishSingleStepCalibration(step: CalibrationStep) {
+        removeCalibrationOverlay()
+        Toast.makeText(this, getString(R.string.calib_toast_step_saved, shortLabelFor(step)), Toast.LENGTH_SHORT).show()
+        calibrationMenuView?.findViewById<LinearLayout>(R.id.calib_menu_items)?.let { rebuildCalibrationMenuItems(it) }
+    }
+
+    private fun applyCalibrationRegion(cfg: BotConfig, step: CalibrationStep, region: CalibratedRegion) {
         when (step) {
-            CalibrationStep.MONSTER_SPAWN_AREA -> workingConfig.monsterSpawnArea = region
-            CalibrationStep.MAP_ANCHOR -> workingConfig.mapAnchor = region
-            CalibrationStep.BATTLE_ANCHOR -> workingConfig.battleAnchor = region
+            CalibrationStep.MONSTER_SPAWN_AREA -> cfg.monsterSpawnArea = region
+            CalibrationStep.MAP_ANCHOR -> cfg.mapAnchor = region
+            CalibrationStep.BATTLE_ANCHOR -> cfg.battleAnchor = region
             else -> Unit
         }
     }
 
-    private fun applyCalibrationButton(step: CalibrationStep, button: CalibratedButton) {
+    private fun applyCalibrationButton(cfg: BotConfig, step: CalibrationStep, button: CalibratedButton) {
         when (step) {
-            CalibrationStep.CONFIRM_BUTTON -> workingConfig.confirmButton = button
-            CalibrationStep.BATTLE_ATTACK_SLOT -> workingConfig.battleAttackSlot = button
-            CalibrationStep.RESULT_CONTINUE_BUTTON -> workingConfig.resultContinueButton = button
-            CalibrationStep.ITEMS_BUTTON -> workingConfig.itemsButton = button
+            CalibrationStep.CONFIRM_BUTTON -> cfg.confirmButton = button
+            CalibrationStep.BATTLE_ATTACK_SLOT -> cfg.battleAttackSlot = button
+            CalibrationStep.RESULT_CONTINUE_BUTTON -> cfg.resultContinueButton = button
+            CalibrationStep.ITEMS_BUTTON -> cfg.itemsButton = button
             else -> Unit
-        }
-    }
-
-    private fun updateCalibrationStepUi() {
-        val step = calibrationSteps[calibrationIndex]
-        calibrationOverlayView?.currentStep = step
-        calibrationInstructionText?.text = instructionFor(step)
-    }
-
-    private fun advanceCalibrationStep() {
-        calibrationIndex++
-        if (calibrationIndex >= calibrationSteps.size) {
-            configRepository.save(workingConfig)
-            removeCalibrationOverlay()
-            Toast.makeText(this, getString(R.string.calib_toast_done), Toast.LENGTH_SHORT).show()
-        } else {
-            updateCalibrationStepUi()
         }
     }
 
@@ -369,6 +423,33 @@ class OrnaBotService : Service() {
         calibrationOverlayView = null
         calibrationInstructionText = null
     }
+
+    private fun isStepCalibrated(cfg: BotConfig, step: CalibrationStep): Boolean = when (step) {
+        CalibrationStep.MONSTER_SPAWN_AREA -> cfg.monsterSpawnArea != null
+        CalibrationStep.MAP_ANCHOR -> cfg.mapAnchor != null
+        CalibrationStep.BATTLE_ANCHOR -> cfg.battleAnchor != null
+        CalibrationStep.CONFIRM_BUTTON -> cfg.confirmButton != null
+        CalibrationStep.BATTLE_ATTACK_SLOT -> cfg.battleAttackSlot != null
+        CalibrationStep.RESULT_CONTINUE_BUTTON -> cfg.resultContinueButton != null
+        CalibrationStep.ITEMS_BUTTON -> cfg.itemsButton != null
+    }
+
+    private fun menuLabelFor(step: CalibrationStep, cfg: BotConfig): String {
+        val statusRes = if (isStepCalibrated(cfg, step)) R.string.calib_status_done else R.string.calib_status_missing
+        return shortLabelFor(step) + getString(statusRes)
+    }
+
+    private fun shortLabelFor(step: CalibrationStep): String = getString(
+        when (step) {
+            CalibrationStep.MONSTER_SPAWN_AREA -> R.string.calib_menu_item_spawn_area
+            CalibrationStep.MAP_ANCHOR -> R.string.calib_menu_item_map_anchor
+            CalibrationStep.BATTLE_ANCHOR -> R.string.calib_menu_item_battle_anchor
+            CalibrationStep.CONFIRM_BUTTON -> R.string.calib_menu_item_confirm_button
+            CalibrationStep.BATTLE_ATTACK_SLOT -> R.string.calib_menu_item_battle_slot
+            CalibrationStep.RESULT_CONTINUE_BUTTON -> R.string.calib_menu_item_continue_button
+            CalibrationStep.ITEMS_BUTTON -> R.string.calib_menu_item_items_button
+        }
+    )
 
     private fun instructionFor(step: CalibrationStep): String = getString(
         when (step) {

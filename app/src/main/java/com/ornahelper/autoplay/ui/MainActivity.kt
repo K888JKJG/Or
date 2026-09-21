@@ -160,7 +160,7 @@ class MainActivity : AppCompatActivity() {
     private fun requestCalibration() {
         val intent = Intent(this, OrnaBotService::class.java).setAction(OrnaBotService.ACTION_SHOW_CALIBRATION)
         ContextCompat.startForegroundService(this, intent)
-        Toast.makeText(this, "請切換到遊戲畫面，依照懸浮面板上的提示完成校準", Toast.LENGTH_LONG).show()
+        Toast.makeText(this, "已開啟校準選單，可在遊戲中切換畫面後再點選要校準的項目", Toast.LENGTH_LONG).show()
     }
 
     private fun toggleBot() {

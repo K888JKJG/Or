@@ -136,17 +136,27 @@ class BotEngine(
     }
 
     /**
-     * Confirm and result are both just "a screen with a green button to tap", so they're told
-     * apart from everything else by checking whether their own calibrated tap point currently
-     * looks green (hue/saturation/value) — not by comparing colors against each other. Checking
-     * these first means a stray map/battle anchor match never overrides an actual green button.
+     * Map and battle are checked first: each has its own dedicated region ([BotConfig.mapAnchor]
+     * / [BotConfig.battleAnchor]) compared against its own calibrated reference color, which is a
+     * much stronger signal than a single point's hue. Only one should ever match a real frame; if
+     * a badly chosen pair of regions somehow both match, the closer one wins.
      *
-     * Map and battle are visually stable full screens, so each gets its own dedicated region
-     * ([BotConfig.mapAnchor] / [BotConfig.battleAnchor]) compared independently against its own
-     * calibrated reference color. Only one should ever match a real frame; if a badly chosen pair
-     * of regions somehow both match, the closer one wins.
+     * Confirm and result are checked only as a fallback, once neither map nor battle matched —
+     * they're recognized by whether their own tap point currently looks green (hue/saturation/
+     * value), since both screens are just "a green button to tap". This order matters: map ground
+     * is very often green too, so if the green check ran first it could misfire while the bot is
+     * simply standing on the map, well before it ever gets near a confirm/result screen.
      */
     private fun detectState(frame: Bitmap, cfg: BotConfig): BotState {
+        val mapDistance = cfg.mapAnchor?.let { BarReader.regionColorDistance(frame, it) }
+        val battleDistance = cfg.battleAnchor?.let { BarReader.regionColorDistance(frame, it) }
+
+        val battleMatches = battleDistance != null && battleDistance <= cfg.stateAnchorTolerance
+        val mapMatches = mapDistance != null && mapDistance <= cfg.stateAnchorTolerance
+
+        if (battleMatches && (!mapMatches || battleDistance!! <= mapDistance!!)) return BotState.BATTLE
+        if (mapMatches) return BotState.MAP
+
         cfg.confirmButton?.let { btn ->
             if (BarReader.regionLooksGreen(frame, btn.anchor.rect)) return BotState.CONFIRM
         }
@@ -154,14 +164,6 @@ class BotEngine(
             if (BarReader.regionLooksGreen(frame, btn.anchor.rect)) return BotState.RESULT
         }
 
-        val mapDistance = cfg.mapAnchor?.let { BarReader.regionColorDistance(frame, it) }
-        val battleDistance = cfg.battleAnchor?.let { BarReader.regionColorDistance(frame, it) }
-
-        return when {
-            battleDistance != null && battleDistance <= cfg.stateAnchorTolerance &&
-                (mapDistance == null || battleDistance <= mapDistance) -> BotState.BATTLE
-            mapDistance != null && mapDistance <= cfg.stateAnchorTolerance -> BotState.MAP
-            else -> BotState.UNKNOWN
-        }
+        return BotState.UNKNOWN
     }
 }
