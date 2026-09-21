@@ -42,7 +42,7 @@ class ConfigRepository(context: Context) {
         put("maxRuntimeMinutes", c.maxRuntimeMinutes)
         put("stateAnchorTolerance", c.stateAnchorTolerance)
         put("monsterColorTolerance", c.monsterColorTolerance)
-        put("minMonsterMatchedSamples", c.minMonsterMatchedSamples)
+        put("minMonsterClusterSamples", c.minMonsterClusterSamples)
     }
 
     private fun fromJson(o: JSONObject): BotConfig {
@@ -64,7 +64,7 @@ class ConfigRepository(context: Context) {
             maxRuntimeMinutes = o.optInt("maxRuntimeMinutes", defaults.maxRuntimeMinutes),
             stateAnchorTolerance = o.optInt("stateAnchorTolerance", defaults.stateAnchorTolerance),
             monsterColorTolerance = o.optInt("monsterColorTolerance", defaults.monsterColorTolerance),
-            minMonsterMatchedSamples = o.optInt("minMonsterMatchedSamples", defaults.minMonsterMatchedSamples)
+            minMonsterClusterSamples = o.optInt("minMonsterClusterSamples", defaults.minMonsterClusterSamples)
         )
     }
 

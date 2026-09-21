@@ -61,15 +61,18 @@ object BarReader {
 
     /**
      * Scans [region] on a coarse grid for pixels that differ from its reference (background)
-     * color by more than [tolerance] — i.e. a monster standing on an otherwise empty spawn
-     * area — and returns the centroid of every such pixel. Returns null if fewer than
-     * [minMatchedSamples] pixels matched (nothing there worth tapping).
+     * color by more than [tolerance] — i.e. monsters standing on an otherwise empty spawn
+     * area — groups adjacent matching grid cells into clusters (8-connectivity flood fill),
+     * and returns the centroid of the *largest* cluster. This picks a point that actually
+     * lands on one monster even when several are visible at once, instead of averaging every
+     * matched pixel together into empty space between them. Returns null if the largest
+     * cluster has fewer than [minClusterSamples] grid cells (nothing there worth tapping).
      */
-    fun findForegroundCentroid(
+    fun findLargestClusterCentroid(
         bitmap: Bitmap,
         region: CalibratedRegion,
         tolerance: Int,
-        minMatchedSamples: Int
+        minClusterSamples: Int
     ): TapPoint? {
         val r = region.rect
         val left = r.left.coerceIn(0, bitmap.width - 1)
@@ -80,26 +83,66 @@ object BarReader {
 
         val stepX = maxOf(1, (right - left) / 80)
         val stepY = maxOf(1, (bottom - top) / 80)
+        val cols = (right - left + stepX - 1) / stepX
+        val rows = (bottom - top + stepY - 1) / stepY
+        if (cols <= 0 || rows <= 0) return null
 
-        var sumX = 0L
-        var sumY = 0L
-        var matched = 0
-        var y = top
-        while (y < bottom) {
-            var x = left
-            while (x < right) {
+        val foreground = BooleanArray(cols * rows)
+        for (row in 0 until rows) {
+            val y = (top + row * stepY).coerceAtMost(bottom - 1)
+            for (col in 0 until cols) {
+                val x = (left + col * stepX).coerceAtMost(right - 1)
                 val px = bitmap.getPixel(x, y)
-                if (colorDistance(px, region.referenceColor) > tolerance) {
-                    sumX += x
-                    sumY += y
-                    matched++
-                }
-                x += stepX
+                foreground[row * cols + col] = colorDistance(px, region.referenceColor) > tolerance
             }
-            y += stepY
         }
-        if (matched < minMatchedSamples) return null
-        return TapPoint((sumX / matched).toInt(), (sumY / matched).toInt())
+
+        val visited = BooleanArray(cols * rows)
+        val queue = ArrayDeque<Int>()
+        var bestCount = 0
+        var bestSumX = 0L
+        var bestSumY = 0L
+
+        for (start in 0 until cols * rows) {
+            if (!foreground[start] || visited[start]) continue
+            queue.clear()
+            queue.add(start)
+            visited[start] = true
+            var count = 0
+            var sumX = 0L
+            var sumY = 0L
+            while (queue.isNotEmpty()) {
+                val idx = queue.removeFirst()
+                val row = idx / cols
+                val col = idx % cols
+                count++
+                sumX += left + col * stepX
+                sumY += top + row * stepY
+
+                for (dr in -1..1) {
+                    for (dc in -1..1) {
+                        if (dr == 0 && dc == 0) continue
+                        val nr = row + dr
+                        val nc = col + dc
+                        if (nr in 0 until rows && nc in 0 until cols) {
+                            val nIdx = nr * cols + nc
+                            if (foreground[nIdx] && !visited[nIdx]) {
+                                visited[nIdx] = true
+                                queue.add(nIdx)
+                            }
+                        }
+                    }
+                }
+            }
+            if (count > bestCount) {
+                bestCount = count
+                bestSumX = sumX
+                bestSumY = sumY
+            }
+        }
+
+        if (bestCount < minClusterSamples) return null
+        return TapPoint((bestSumX / bestCount).toInt(), (bestSumY / bestCount).toInt())
     }
 
     fun colorDistance(a: Int, b: Int): Int {

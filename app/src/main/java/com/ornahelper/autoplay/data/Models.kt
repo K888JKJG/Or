@@ -64,7 +64,7 @@ data class BotConfig(
 
     var stateAnchorTolerance: Int = 40,
     var monsterColorTolerance: Int = 60,
-    var minMonsterMatchedSamples: Int = 15
+    var minMonsterClusterSamples: Int = 6
 ) {
     val isCombatReady: Boolean
         get() = monsterSpawnArea != null && mapAnchor != null && confirmButton != null &&
