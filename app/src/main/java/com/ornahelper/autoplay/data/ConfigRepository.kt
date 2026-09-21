@@ -29,6 +29,8 @@ class ConfigRepository(context: Context) {
         put("monsterSpawnArea", c.monsterSpawnArea?.toJson())
         put("mapAnchor", c.mapAnchor?.toJson())
         put("battleAnchor", c.battleAnchor?.toJson())
+        put("confirmAnchor", c.confirmAnchor?.toJson())
+        put("resultAnchor", c.resultAnchor?.toJson())
         put("confirmButton", c.confirmButton?.toJson())
         put("battleAttackSlot", c.battleAttackSlot?.toJson())
         put("resultContinueButton", c.resultContinueButton?.toJson())
@@ -52,6 +54,8 @@ class ConfigRepository(context: Context) {
             monsterSpawnArea = o.optRegionOrNull("monsterSpawnArea"),
             mapAnchor = o.optRegionOrNull("mapAnchor"),
             battleAnchor = o.optRegionOrNull("battleAnchor"),
+            confirmAnchor = o.optRegionOrNull("confirmAnchor"),
+            resultAnchor = o.optRegionOrNull("resultAnchor"),
             confirmButton = o.optButtonOrNull("confirmButton"),
             battleAttackSlot = o.optButtonOrNull("battleAttackSlot"),
             resultContinueButton = o.optButtonOrNull("resultContinueButton"),

@@ -402,6 +402,8 @@ class OrnaBotService : Service() {
             CalibrationStep.MONSTER_SPAWN_AREA -> cfg.monsterSpawnArea = region
             CalibrationStep.MAP_ANCHOR -> cfg.mapAnchor = region
             CalibrationStep.BATTLE_ANCHOR -> cfg.battleAnchor = region
+            CalibrationStep.CONFIRM_ANCHOR -> cfg.confirmAnchor = region
+            CalibrationStep.RESULT_ANCHOR -> cfg.resultAnchor = region
             else -> Unit
         }
     }
@@ -428,6 +430,8 @@ class OrnaBotService : Service() {
         CalibrationStep.MONSTER_SPAWN_AREA -> cfg.monsterSpawnArea != null
         CalibrationStep.MAP_ANCHOR -> cfg.mapAnchor != null
         CalibrationStep.BATTLE_ANCHOR -> cfg.battleAnchor != null
+        CalibrationStep.CONFIRM_ANCHOR -> cfg.confirmAnchor != null
+        CalibrationStep.RESULT_ANCHOR -> cfg.resultAnchor != null
         CalibrationStep.CONFIRM_BUTTON -> cfg.confirmButton != null
         CalibrationStep.BATTLE_ATTACK_SLOT -> cfg.battleAttackSlot != null
         CalibrationStep.RESULT_CONTINUE_BUTTON -> cfg.resultContinueButton != null
@@ -444,6 +448,8 @@ class OrnaBotService : Service() {
             CalibrationStep.MONSTER_SPAWN_AREA -> R.string.calib_menu_item_spawn_area
             CalibrationStep.MAP_ANCHOR -> R.string.calib_menu_item_map_anchor
             CalibrationStep.BATTLE_ANCHOR -> R.string.calib_menu_item_battle_anchor
+            CalibrationStep.CONFIRM_ANCHOR -> R.string.calib_menu_item_confirm_anchor
+            CalibrationStep.RESULT_ANCHOR -> R.string.calib_menu_item_result_anchor
             CalibrationStep.CONFIRM_BUTTON -> R.string.calib_menu_item_confirm_button
             CalibrationStep.BATTLE_ATTACK_SLOT -> R.string.calib_menu_item_battle_slot
             CalibrationStep.RESULT_CONTINUE_BUTTON -> R.string.calib_menu_item_continue_button
@@ -456,6 +462,8 @@ class OrnaBotService : Service() {
             CalibrationStep.MONSTER_SPAWN_AREA -> R.string.calib_step_spawn_area
             CalibrationStep.MAP_ANCHOR -> R.string.calib_step_map_anchor
             CalibrationStep.BATTLE_ANCHOR -> R.string.calib_step_battle_anchor
+            CalibrationStep.CONFIRM_ANCHOR -> R.string.calib_step_confirm_anchor
+            CalibrationStep.RESULT_ANCHOR -> R.string.calib_step_result_anchor
             CalibrationStep.CONFIRM_BUTTON -> R.string.calib_step_confirm_button
             CalibrationStep.BATTLE_ATTACK_SLOT -> R.string.calib_step_battle_slot
             CalibrationStep.RESULT_CONTINUE_BUTTON -> R.string.calib_step_continue_button

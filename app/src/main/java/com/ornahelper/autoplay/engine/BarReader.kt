@@ -15,36 +15,10 @@ import kotlin.math.sqrt
  */
 object BarReader {
 
-    /** True if the region's average color is still close to its calibrated reference color. */
-    fun regionMatchesReference(bitmap: Bitmap, region: CalibratedRegion, tolerance: Int): Boolean {
-        val avg = averageColor(bitmap, region.rect) ?: return false
-        return colorDistance(avg, region.referenceColor) <= tolerance
-    }
-
     /** Distance between [region]'s live average color and its calibrated reference, or null if out of bounds. */
     fun regionColorDistance(bitmap: Bitmap, region: CalibratedRegion): Int? {
         val avg = averageColor(bitmap, region.rect) ?: return null
         return colorDistance(avg, region.referenceColor)
-    }
-
-    /**
-     * True if [rect]'s average color looks like a vivid green "call to action" button, judged by
-     * hue/saturation/value rather than by distance to any calibrated reference — this is what lets
-     * the same check recognize a green button on two different screens (e.g. "confirm" and
-     * "continue") without confusing them with each other.
-     */
-    fun regionLooksGreen(
-        bitmap: Bitmap,
-        rect: ScreenRect,
-        minHue: Float = 70f,
-        maxHue: Float = 170f,
-        minSaturation: Float = 0.30f,
-        minValue: Float = 0.30f
-    ): Boolean {
-        val avg = averageColor(bitmap, rect) ?: return false
-        val hsv = FloatArray(3)
-        Color.colorToHSV(avg, hsv)
-        return hsv[0] in minHue..maxHue && hsv[1] >= minSaturation && hsv[2] >= minValue
     }
 
     /** Samples the average color across a grid inside [rect]; used during calibration and state checks. */

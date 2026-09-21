@@ -45,15 +45,17 @@ enum class BotState { UNKNOWN, MAP, CONFIRM, BATTLE, RESULT }
  * [battleAttackSlot]; on the result screen, tap [resultContinueButton] to go back to the map.
  * [itemsButton] is long-pressed periodically while on the map to auto-recover HP/MP.
  *
- * [mapAnchor] and [battleAnchor] are each checked independently against their own reference
- * color to tell the map and battle screens apart; [confirmButton] and [resultContinueButton]
- * are instead recognized by checking whether their tap point is currently showing a green
- * "call to action" color, since both screens share that same green-button look.
+ * All four screens are told apart the same way: [mapAnchor], [battleAnchor], [confirmAnchor]
+ * and [resultAnchor] are each a dedicated region (independent from the tap points above) whose
+ * live color is compared against its own calibrated reference color — whichever comes closest,
+ * within tolerance, is the current screen.
  */
 data class BotConfig(
     var monsterSpawnArea: CalibratedRegion? = null,
     var mapAnchor: CalibratedRegion? = null,
     var battleAnchor: CalibratedRegion? = null,
+    var confirmAnchor: CalibratedRegion? = null,
+    var resultAnchor: CalibratedRegion? = null,
     var confirmButton: CalibratedButton? = null,
     var battleAttackSlot: CalibratedButton? = null,
     var resultContinueButton: CalibratedButton? = null,
@@ -74,6 +76,7 @@ data class BotConfig(
 ) {
     val isCombatReady: Boolean
         get() = monsterSpawnArea != null && mapAnchor != null && battleAnchor != null &&
+            confirmAnchor != null && resultAnchor != null &&
             confirmButton != null && battleAttackSlot != null && resultContinueButton != null
 }
 
@@ -87,6 +90,8 @@ enum class CalibrationStep(val isRect: Boolean) {
     MONSTER_SPAWN_AREA(isRect = true),
     MAP_ANCHOR(isRect = true),
     BATTLE_ANCHOR(isRect = true),
+    CONFIRM_ANCHOR(isRect = true),
+    RESULT_ANCHOR(isRect = true),
     CONFIRM_BUTTON(isRect = false),
     BATTLE_ATTACK_SLOT(isRect = false),
     RESULT_CONTINUE_BUTTON(isRect = false),

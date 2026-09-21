@@ -15,7 +15,7 @@
 
     <string name="section_calibration">2. 校準（在遊戲畫面上框選/點選位置）</string>
     <string name="btn_start_calibration">開啟校準選單</string>
-    <string name="calibration_hint">服務啟動後懸浮控制面板會出現在畫面上。點擊「校準」會打開一個項目選單，7 個項目可以分開、任意順序校準：先在遊戲裡正常操作切到需要的畫面（例如打一場戰鬥），再點選單裡對應的項目框選/點選一次即可，不需要一次做完。</string>
+    <string name="calibration_hint">服務啟動後懸浮控制面板會出現在畫面上。點擊「校準」會打開一個項目選單，9 個項目可以分開、任意順序校準：先在遊戲裡正常操作切到需要的畫面（例如打一場戰鬥），再點選單裡對應的項目框選/點選一次即可，不需要一次做完。</string>
 
     <string name="section_thresholds">3. 閾值設定</string>
     <string name="label_tick_interval">偵測間隔（毫秒）：%1$d</string>
@@ -42,6 +42,8 @@
     <string name="calib_step_spawn_area">在主畫面上，拖曳框選怪物出現的區域（畫面中央那個橢圓範圍），盡量在怪物較少或沒有怪物時框選</string>
     <string name="calib_step_map_anchor">框選主畫面上一個「只有在主畫面才會出現」的固定小區域（例如左上角圖示），用來判斷目前是否在主畫面</string>
     <string name="calib_step_battle_anchor">框選一個「只有在戰鬥畫面才會出現」的固定小區域（例如背景地形或角色狀態列附近），用來判斷目前是否在戰鬥中；請先在遊戲裡手動切到戰鬥畫面再框選</string>
+    <string name="calib_step_confirm_anchor">框選一個「只有在確認戰鬥介面才會出現」的固定小區域（例如角色立繪或背景），用來判斷目前是否在確認介面；請先在遊戲裡手動點怪物切到確認介面再框選</string>
+    <string name="calib_step_result_anchor">框選一個「只有在結算畫面才會出現」的固定小區域（例如「勝利！」文字附近或戰利品區塊），用來判斷目前是否在結算畫面；請先在遊戲裡手動打完一場戰鬥切到結算畫面再框選</string>
     <string name="calib_step_confirm_button">點一下綠色「戰鬥」確認按鈕的位置；請先在遊戲裡手動點怪物切到確認介面再點</string>
     <string name="calib_step_battle_slot">點一下戰鬥畫面下方六個欄位中「左上」那一格的位置；請先在遊戲裡手動切到戰鬥畫面再點</string>
     <string name="calib_step_continue_button">點一下結算畫面上綠色「繼續」按鈕的位置；請先在遊戲裡手動打完一場戰鬥切到結算畫面再點</string>
@@ -54,6 +56,8 @@
     <string name="calib_menu_item_spawn_area">怪物範圍</string>
     <string name="calib_menu_item_map_anchor">地圖錨點</string>
     <string name="calib_menu_item_battle_anchor">戰鬥錨點</string>
+    <string name="calib_menu_item_confirm_anchor">確認介面錨點</string>
+    <string name="calib_menu_item_result_anchor">結算畫面錨點</string>
     <string name="calib_menu_item_confirm_button">戰鬥確認鈕</string>
     <string name="calib_menu_item_battle_slot">戰鬥攻擊格</string>
     <string name="calib_menu_item_continue_button">結算繼續鈕</string>

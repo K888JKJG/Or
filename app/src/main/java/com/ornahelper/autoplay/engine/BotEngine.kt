@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import com.ornahelper.autoplay.data.BotConfig
 import com.ornahelper.autoplay.data.BotState
 import com.ornahelper.autoplay.data.BotStatus
+import com.ornahelper.autoplay.data.CalibratedRegion
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -21,11 +22,10 @@ import kotlinx.coroutines.launch
  * - BATTLE: repeatedly tap the attack slot until the screen changes.
  * - RESULT: tap "continue" to go back to the map.
  *
- * Which screen is showing is decided each tick by [detectState]: map and battle each have
- * their own dedicated region checked independently against its own calibrated reference
- * color, while confirm and result are recognized by checking whether their button's tap
- * point currently looks green — see that function for why. All game-specific knowledge
- * lives in the calibrated [BotConfig] supplied by [configProvider]; this class only
+ * Which screen is showing is decided each tick by [detectState]: all four screens have their
+ * own dedicated region (independent of any tap point) checked against its own calibrated
+ * reference color, and whichever comes closest — within tolerance — wins. All game-specific
+ * knowledge lives in the calibrated [BotConfig] supplied by [configProvider]; this class only
  * contains the decision loop.
  */
 class BotEngine(
@@ -136,34 +136,30 @@ class BotEngine(
     }
 
     /**
-     * Map and battle are checked first: each has its own dedicated region ([BotConfig.mapAnchor]
-     * / [BotConfig.battleAnchor]) compared against its own calibrated reference color, which is a
-     * much stronger signal than a single point's hue. Only one should ever match a real frame; if
-     * a badly chosen pair of regions somehow both match, the closer one wins.
-     *
-     * Confirm and result are checked only as a fallback, once neither map nor battle matched —
-     * they're recognized by whether their own tap point currently looks green (hue/saturation/
-     * value), since both screens are just "a green button to tap". This order matters: map ground
-     * is very often green too, so if the green check ran first it could misfire while the bot is
-     * simply standing on the map, well before it ever gets near a confirm/result screen.
+     * Each screen has its own dedicated calibrated region ([BotConfig.mapAnchor] /
+     * [BotConfig.battleAnchor] / [BotConfig.confirmAnchor] / [BotConfig.resultAnchor]), chosen
+     * independently of any tap point so it can be picked purely for how distinctive and stable
+     * its color is. Every region's live color is compared against its own calibrated reference;
+     * whichever is closest wins, as long as that distance is within [BotConfig.stateAnchorTolerance]
+     * — otherwise the screen is UNKNOWN and that tick does nothing.
      */
     private fun detectState(frame: Bitmap, cfg: BotConfig): BotState {
-        val mapDistance = cfg.mapAnchor?.let { BarReader.regionColorDistance(frame, it) }
-        val battleDistance = cfg.battleAnchor?.let { BarReader.regionColorDistance(frame, it) }
+        var bestState = BotState.UNKNOWN
+        var bestDistance = Int.MAX_VALUE
 
-        val battleMatches = battleDistance != null && battleDistance <= cfg.stateAnchorTolerance
-        val mapMatches = mapDistance != null && mapDistance <= cfg.stateAnchorTolerance
-
-        if (battleMatches && (!mapMatches || battleDistance!! <= mapDistance!!)) return BotState.BATTLE
-        if (mapMatches) return BotState.MAP
-
-        cfg.confirmButton?.let { btn ->
-            if (BarReader.regionLooksGreen(frame, btn.anchor.rect)) return BotState.CONFIRM
-        }
-        cfg.resultContinueButton?.let { btn ->
-            if (BarReader.regionLooksGreen(frame, btn.anchor.rect)) return BotState.RESULT
+        fun consider(state: BotState, anchor: CalibratedRegion?) {
+            val distance = anchor?.let { BarReader.regionColorDistance(frame, it) } ?: return
+            if (distance < bestDistance) {
+                bestDistance = distance
+                bestState = state
+            }
         }
 
-        return BotState.UNKNOWN
+        consider(BotState.MAP, cfg.mapAnchor)
+        consider(BotState.BATTLE, cfg.battleAnchor)
+        consider(BotState.CONFIRM, cfg.confirmAnchor)
+        consider(BotState.RESULT, cfg.resultAnchor)
+
+        return if (bestDistance <= cfg.stateAnchorTolerance) bestState else BotState.UNKNOWN
     }
 }
