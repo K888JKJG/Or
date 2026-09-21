@@ -6,6 +6,7 @@ import com.ornahelper.autoplay.data.CalibratedRegion
 import com.ornahelper.autoplay.data.ScreenRect
 import com.ornahelper.autoplay.data.TapPoint
 import kotlin.math.sqrt
+import kotlin.random.Random
 
 /**
  * Reads calibrated screen regions from a captured frame using simple color matching.
@@ -57,12 +58,15 @@ object BarReader {
      * Scans [region] on a coarse grid for pixels that differ from its reference (background)
      * color by more than [tolerance] — i.e. monsters standing on an otherwise empty spawn
      * area — groups adjacent matching grid cells into clusters (8-connectivity flood fill),
-     * and returns the centroid of the *largest* cluster. This picks a point that actually
-     * lands on one monster even when several are visible at once, instead of averaging every
-     * matched pixel together into empty space between them. Returns null if the largest
-     * cluster has fewer than [minClusterSamples] grid cells (nothing there worth tapping).
+     * and returns a random point sampled from within the *largest* cluster (not its centroid).
+     * A centroid can land in a gap for a concave/irregular monster sprite, and always tapping
+     * the exact same pixel repeatedly does nothing to correct for the monster having drifted
+     * slightly by the time the tap lands; picking a random point that was actually detected as
+     * part of the monster, with a little sub-cell jitter, keeps every attempt on-target while
+     * still varying where exactly it lands. Returns null if the largest cluster has fewer than
+     * [minClusterSamples] grid cells (nothing there worth tapping).
      */
-    fun findLargestClusterCentroid(
+    fun findLargestClusterTapPoint(
         bitmap: Bitmap,
         region: CalibratedRegion,
         tolerance: Int,
@@ -93,25 +97,19 @@ object BarReader {
 
         val visited = BooleanArray(cols * rows)
         val queue = ArrayDeque<Int>()
-        var bestCount = 0
-        var bestSumX = 0L
-        var bestSumY = 0L
+        var bestMembers: List<Int> = emptyList()
 
         for (start in 0 until cols * rows) {
             if (!foreground[start] || visited[start]) continue
             queue.clear()
             queue.add(start)
             visited[start] = true
-            var count = 0
-            var sumX = 0L
-            var sumY = 0L
+            val members = mutableListOf<Int>()
             while (queue.isNotEmpty()) {
                 val idx = queue.removeFirst()
+                members.add(idx)
                 val row = idx / cols
                 val col = idx % cols
-                count++
-                sumX += left + col * stepX
-                sumY += top + row * stepY
 
                 for (dr in -1..1) {
                     for (dc in -1..1) {
@@ -128,15 +126,16 @@ object BarReader {
                     }
                 }
             }
-            if (count > bestCount) {
-                bestCount = count
-                bestSumX = sumX
-                bestSumY = sumY
-            }
+            if (members.size > bestMembers.size) bestMembers = members
         }
 
-        if (bestCount < minClusterSamples) return null
-        return TapPoint((bestSumX / bestCount).toInt(), (bestSumY / bestCount).toInt())
+        if (bestMembers.size < minClusterSamples) return null
+        val chosen = bestMembers[Random.nextInt(bestMembers.size)]
+        val baseX = left + (chosen % cols) * stepX
+        val baseY = top + (chosen / cols) * stepY
+        val x = (baseX + Random.nextInt(stepX)).coerceIn(left, right - 1)
+        val y = (baseY + Random.nextInt(stepY)).coerceIn(top, bottom - 1)
+        return TapPoint(x, y)
     }
 
     fun colorDistance(a: Int, b: Int): Int {

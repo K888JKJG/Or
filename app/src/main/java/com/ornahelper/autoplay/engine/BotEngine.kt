@@ -100,7 +100,7 @@ class BotEngine(
                 }
                 if (now - lastMapTapAt >= cfg.mapTapCooldownMs) {
                     cfg.monsterSpawnArea?.let { area ->
-                        val target = BarReader.findLargestClusterCentroid(
+                        val target = BarReader.findLargestClusterTapPoint(
                             frame, area, cfg.monsterColorTolerance, cfg.minMonsterClusterSamples
                         )
                         if (target != null && tapper(target.x, target.y)) lastMapTapAt = now

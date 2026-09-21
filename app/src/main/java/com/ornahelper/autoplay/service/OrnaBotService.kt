@@ -300,6 +300,7 @@ class OrnaBotService : Service() {
         calibrationMenuView = root
         resetArmed = false
 
+        val dragHandle = root.findViewById<TextView>(R.id.calib_menu_drag_handle)
         val itemsContainer = root.findViewById<LinearLayout>(R.id.calib_menu_items)
         val btnReset = root.findViewById<Button>(R.id.calib_menu_btn_reset)
         val btnClose = root.findViewById<Button>(R.id.calib_menu_btn_close)
@@ -318,6 +319,7 @@ class OrnaBotService : Service() {
             x = 20
             y = 220
         }
+        dragHandle.setOnTouchListener(dragListener(params, root))
         windowManager.addView(root, params)
     }
 

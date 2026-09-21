@@ -1,47 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="260dp"
     android:layout_height="wrap_content"
-    android:background="@color/overlay_panel_bg"
-    android:padding="8dp">
+    android:orientation="vertical"
+    android:background="@color/overlay_panel_bg">
 
-    <LinearLayout
+    <TextView
+        android:id="@+id/calib_menu_drag_handle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:gravity="center"
+        android:text="⠿ 校準選單"
+        android:textColor="@color/overlay_text"
+        android:textSize="11sp"
+        android:padding="4dp" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/calib_menu_title"
-            android:textColor="@color/overlay_text"
-            android:textSize="12sp"
-            android:paddingBottom="6dp" />
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="8dp">
 
         <LinearLayout
-            android:id="@+id/calib_menu_items"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" />
+            android:orientation="vertical">
 
-        <Button
-            android:id="@+id/calib_menu_btn_reset"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:minHeight="0dp"
-            android:textSize="11sp"
-            android:padding="6dp"
-            android:text="@string/calib_menu_reset" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/calib_menu_title"
+                android:textColor="@color/overlay_text"
+                android:textSize="12sp"
+                android:paddingBottom="6dp" />
 
-        <Button
-            android:id="@+id/calib_menu_btn_close"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:minHeight="0dp"
-            android:textSize="11sp"
-            android:padding="6dp"
-            android:text="@string/calib_menu_close" />
-    </LinearLayout>
-</ScrollView>
+            <LinearLayout
+                android:id="@+id/calib_menu_items"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <Button
+                android:id="@+id/calib_menu_btn_reset"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:minHeight="0dp"
+                android:textSize="11sp"
+                android:padding="6dp"
+                android:text="@string/calib_menu_reset" />
+
+            <Button
+                android:id="@+id/calib_menu_btn_close"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:minHeight="0dp"
+                android:textSize="11sp"
+                android:padding="6dp"
+                android:text="@string/calib_menu_close" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
