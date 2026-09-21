@@ -25,10 +25,20 @@
             android:orientation="vertical" />
 
         <Button
-            android:id="@+id/calib_menu_btn_close"
+            android:id="@+id/calib_menu_btn_reset"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
+            android:minHeight="0dp"
+            android:textSize="11sp"
+            android:padding="6dp"
+            android:text="@string/calib_menu_reset" />
+
+        <Button
+            android:id="@+id/calib_menu_btn_close"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
             android:minHeight="0dp"
             android:textSize="11sp"
             android:padding="6dp"

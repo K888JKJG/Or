@@ -279,12 +279,15 @@ class OrnaBotService : Service() {
 
     // ---- Calibration menu -------------------------------------------------------------------
     //
-    // Calibration is 7 independent, on-demand items rather than one linear wizard: the menu
+    // Calibration is 9 independent, on-demand items rather than one linear wizard: the menu
     // itself is a small floating panel (like the control panel) that never blocks touches to
     // the game underneath, so the player can freely navigate to whatever screen a given item
     // needs (e.g. actually fight a monster to reach the battle screen) before tapping that
     // item. Only the brief single-gesture capture that follows tapping an item briefly covers
     // the full screen, and it closes itself the instant that one region/point is captured.
+
+    private var resetArmed = false
+    private var resetRevertRunnable: Runnable? = null
 
     private fun showCalibrationMenu() {
         if (calibrationMenuView != null) return
@@ -295,10 +298,13 @@ class OrnaBotService : Service() {
 
         val root = LayoutInflater.from(this).inflate(R.layout.overlay_calibration_menu, null)
         calibrationMenuView = root
+        resetArmed = false
 
         val itemsContainer = root.findViewById<LinearLayout>(R.id.calib_menu_items)
+        val btnReset = root.findViewById<Button>(R.id.calib_menu_btn_reset)
         val btnClose = root.findViewById<Button>(R.id.calib_menu_btn_close)
         rebuildCalibrationMenuItems(itemsContainer)
+        btnReset.setOnClickListener { onResetButtonClicked(btnReset, itemsContainer) }
         btnClose.setOnClickListener { removeCalibrationMenu() }
 
         val params = WindowManager.LayoutParams(
@@ -313,6 +319,29 @@ class OrnaBotService : Service() {
             y = 220
         }
         windowManager.addView(root, params)
+    }
+
+    /** Requires two taps within 3 seconds before actually wiping every calibrated setting. */
+    private fun onResetButtonClicked(btnReset: Button, itemsContainer: LinearLayout) {
+        if (!resetArmed) {
+            resetArmed = true
+            btnReset.text = getString(R.string.calib_menu_reset_confirm)
+            resetRevertRunnable = Runnable {
+                resetArmed = false
+                btnReset.text = getString(R.string.calib_menu_reset)
+            }
+            mainHandler.postDelayed(resetRevertRunnable!!, 3000L)
+            return
+        }
+
+        resetRevertRunnable?.let { mainHandler.removeCallbacks(it) }
+        resetRevertRunnable = null
+        resetArmed = false
+        botEngine.stop()
+        configRepository.save(BotConfig())
+        btnReset.text = getString(R.string.calib_menu_reset)
+        rebuildCalibrationMenuItems(itemsContainer)
+        Toast.makeText(this, getString(R.string.calib_toast_reset_done), Toast.LENGTH_SHORT).show()
     }
 
     private fun rebuildCalibrationMenuItems(container: LinearLayout) {
@@ -337,6 +366,9 @@ class OrnaBotService : Service() {
 
     private fun removeCalibrationMenu() {
         val root = calibrationMenuView ?: return
+        resetRevertRunnable?.let { mainHandler.removeCallbacks(it) }
+        resetRevertRunnable = null
+        resetArmed = false
         runCatching { windowManager.removeView(root) }
         calibrationMenuView = null
     }

@@ -63,6 +63,9 @@
     <string name="calib_menu_item_continue_button">結算繼續鈕</string>
     <string name="calib_menu_item_items_button">物品鈕</string>
     <string name="calib_menu_close">關閉選單</string>
+    <string name="calib_menu_reset">重設全部設定</string>
+    <string name="calib_menu_reset_confirm">再按一次確認重設全部設定</string>
+    <string name="calib_toast_reset_done">已重設全部設定</string>
     <string name="calib_status_done">（已校準）</string>
     <string name="calib_status_missing">（未校準）</string>
 </resources>
