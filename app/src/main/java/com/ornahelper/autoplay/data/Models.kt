@@ -44,10 +44,16 @@ enum class BotState { UNKNOWN, MAP, CONFIRM, BATTLE, RESULT }
  * on the confirm screen, tap [confirmButton]; on the battle screen, repeatedly tap
  * [battleAttackSlot]; on the result screen, tap [resultContinueButton] to go back to the map.
  * [itemsButton] is long-pressed periodically while on the map to auto-recover HP/MP.
+ *
+ * [mapAnchor] and [battleAnchor] are each checked independently against their own reference
+ * color to tell the map and battle screens apart; [confirmButton] and [resultContinueButton]
+ * are instead recognized by checking whether their tap point is currently showing a green
+ * "call to action" color, since both screens share that same green-button look.
  */
 data class BotConfig(
     var monsterSpawnArea: CalibratedRegion? = null,
     var mapAnchor: CalibratedRegion? = null,
+    var battleAnchor: CalibratedRegion? = null,
     var confirmButton: CalibratedButton? = null,
     var battleAttackSlot: CalibratedButton? = null,
     var resultContinueButton: CalibratedButton? = null,
@@ -67,8 +73,8 @@ data class BotConfig(
     var minMonsterClusterSamples: Int = 6
 ) {
     val isCombatReady: Boolean
-        get() = monsterSpawnArea != null && mapAnchor != null && confirmButton != null &&
-            battleAttackSlot != null && resultContinueButton != null
+        get() = monsterSpawnArea != null && mapAnchor != null && battleAnchor != null &&
+            confirmButton != null && battleAttackSlot != null && resultContinueButton != null
 }
 
 data class BotStatus(
@@ -80,6 +86,7 @@ data class BotStatus(
 enum class CalibrationStep(val isRect: Boolean) {
     MONSTER_SPAWN_AREA(isRect = true),
     MAP_ANCHOR(isRect = true),
+    BATTLE_ANCHOR(isRect = true),
     CONFIRM_BUTTON(isRect = false),
     BATTLE_ATTACK_SLOT(isRect = false),
     RESULT_CONTINUE_BUTTON(isRect = false),

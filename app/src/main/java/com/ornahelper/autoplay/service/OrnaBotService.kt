@@ -330,6 +330,7 @@ class OrnaBotService : Service() {
         when (step) {
             CalibrationStep.MONSTER_SPAWN_AREA -> workingConfig.monsterSpawnArea = region
             CalibrationStep.MAP_ANCHOR -> workingConfig.mapAnchor = region
+            CalibrationStep.BATTLE_ANCHOR -> workingConfig.battleAnchor = region
             else -> Unit
         }
     }
@@ -373,6 +374,7 @@ class OrnaBotService : Service() {
         when (step) {
             CalibrationStep.MONSTER_SPAWN_AREA -> R.string.calib_step_spawn_area
             CalibrationStep.MAP_ANCHOR -> R.string.calib_step_map_anchor
+            CalibrationStep.BATTLE_ANCHOR -> R.string.calib_step_battle_anchor
             CalibrationStep.CONFIRM_BUTTON -> R.string.calib_step_confirm_button
             CalibrationStep.BATTLE_ATTACK_SLOT -> R.string.calib_step_battle_slot
             CalibrationStep.RESULT_CONTINUE_BUTTON -> R.string.calib_step_continue_button

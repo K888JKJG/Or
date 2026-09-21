@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import com.ornahelper.autoplay.data.BotConfig
 import com.ornahelper.autoplay.data.BotState
 import com.ornahelper.autoplay.data.BotStatus
-import com.ornahelper.autoplay.data.CalibratedButton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -22,9 +21,10 @@ import kotlinx.coroutines.launch
  * - BATTLE: repeatedly tap the attack slot until the screen changes.
  * - RESULT: tap "continue" to go back to the map.
  *
- * Which screen is showing is guessed each tick by comparing the live color at each
- * calibrated button's anchor point against the color sampled there during calibration —
- * whichever anchor matches best (and within tolerance) wins. All game-specific knowledge
+ * Which screen is showing is decided each tick by [detectState]: map and battle each have
+ * their own dedicated region checked independently against its own calibrated reference
+ * color, while confirm and result are recognized by checking whether their button's tap
+ * point currently looks green — see that function for why. All game-specific knowledge
  * lives in the calibrated [BotConfig] supplied by [configProvider]; this class only
  * contains the decision loop.
  */
@@ -136,34 +136,32 @@ class BotEngine(
     }
 
     /**
-     * Picks whichever calibrated anchor's live color is closest to its reference, as long as
-     * it's within [BotConfig.stateAnchorTolerance]. Result screen and battle screen are checked
-     * before map/confirm since their button anchors tend to be the most visually distinctive.
+     * Confirm and result are both just "a screen with a green button to tap", so they're told
+     * apart from everything else by checking whether their own calibrated tap point currently
+     * looks green (hue/saturation/value) — not by comparing colors against each other. Checking
+     * these first means a stray map/battle anchor match never overrides an actual green button.
+     *
+     * Map and battle are visually stable full screens, so each gets its own dedicated region
+     * ([BotConfig.mapAnchor] / [BotConfig.battleAnchor]) compared independently against its own
+     * calibrated reference color. Only one should ever match a real frame; if a badly chosen pair
+     * of regions somehow both match, the closer one wins.
      */
     private fun detectState(frame: Bitmap, cfg: BotConfig): BotState {
-        var bestState = BotState.UNKNOWN
-        var bestDistance = Int.MAX_VALUE
-
-        fun consider(state: BotState, button: CalibratedButton?) {
-            val distance = button?.let { BarReader.regionColorDistance(frame, it.anchor) } ?: return
-            if (distance < bestDistance) {
-                bestDistance = distance
-                bestState = state
-            }
+        cfg.confirmButton?.let { btn ->
+            if (BarReader.regionLooksGreen(frame, btn.anchor.rect)) return BotState.CONFIRM
+        }
+        cfg.resultContinueButton?.let { btn ->
+            if (BarReader.regionLooksGreen(frame, btn.anchor.rect)) return BotState.RESULT
         }
 
-        consider(BotState.RESULT, cfg.resultContinueButton)
-        consider(BotState.BATTLE, cfg.battleAttackSlot)
-        consider(BotState.CONFIRM, cfg.confirmButton)
+        val mapDistance = cfg.mapAnchor?.let { BarReader.regionColorDistance(frame, it) }
+        val battleDistance = cfg.battleAnchor?.let { BarReader.regionColorDistance(frame, it) }
 
-        cfg.mapAnchor?.let { anchor ->
-            val distance = BarReader.regionColorDistance(frame, anchor) ?: return@let
-            if (distance < bestDistance) {
-                bestDistance = distance
-                bestState = BotState.MAP
-            }
+        return when {
+            battleDistance != null && battleDistance <= cfg.stateAnchorTolerance &&
+                (mapDistance == null || battleDistance <= mapDistance) -> BotState.BATTLE
+            mapDistance != null && mapDistance <= cfg.stateAnchorTolerance -> BotState.MAP
+            else -> BotState.UNKNOWN
         }
-
-        return if (bestDistance <= cfg.stateAnchorTolerance) bestState else BotState.UNKNOWN
     }
 }
