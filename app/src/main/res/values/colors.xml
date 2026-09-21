@@ -1,0 +1,12 @@
+<resources>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="overlay_panel_bg">#CC1B1B1F</color>
+    <color name="overlay_text">#FFFFFFFF</color>
+    <color name="calibration_scrim">#66000000</color>
+    <color name="calibration_rect">#FF00E5FF</color>
+    <color name="calibration_point">#FFFF5252</color>
+</resources>

@@ -1,0 +1,54 @@
+<resources>
+    <string name="app_name">Orna Helper</string>
+    <string name="accessibility_service_description">允許 Orna Helper 在畫面上模擬點擊，用於私有測試環境的自動化操作。</string>
+
+    <string name="section_permissions">1. 授權</string>
+    <string name="btn_overlay_permission">授予懸浮視窗權限</string>
+    <string name="btn_accessibility_settings">開啟無障礙服務設定</string>
+    <string name="btn_start_projection">授權畫面擷取並啟動服務</string>
+    <string name="status_overlay_granted">懸浮視窗：已授權</string>
+    <string name="status_overlay_denied">懸浮視窗：未授權</string>
+    <string name="status_accessibility_enabled">無障礙服務：已啟用</string>
+    <string name="status_accessibility_disabled">無障礙服務：未啟用</string>
+    <string name="status_service_running">背景服務：執行中</string>
+    <string name="status_service_stopped">背景服務：未啟動</string>
+
+    <string name="section_calibration">2. 校準（在遊戲畫面上框選/點選位置）</string>
+    <string name="btn_start_calibration">開始校準精靈</string>
+    <string name="calibration_hint">校準前請先切到遊戲畫面，服務啟動後懸浮控制面板會出現在畫面上，點擊「校準」即可開始。</string>
+
+    <string name="section_thresholds">3. 閾值設定</string>
+    <string name="label_hp_threshold">HP 低於多少百分比自動喝藥：%1$d%%</string>
+    <string name="label_mp_threshold">MP 低於多少百分比自動喝藥：%1$d%%</string>
+    <string name="label_tick_interval">偵測間隔（毫秒）：%1$d</string>
+    <string name="label_max_runtime">最長執行時間（分鐘，0＝不限制）：%1$d</string>
+    <string name="btn_save_config">儲存設定</string>
+
+    <string name="section_control">4. 啟動／停止</string>
+    <string name="btn_toggle_bot">啟動自動戰鬥</string>
+    <string name="btn_toggle_bot_stop">停止自動戰鬥</string>
+
+    <string name="disclaimer_title">重要提醒</string>
+    <string name="disclaimer_body">此工具僅供在你自行架設、完全掌控、且允許自動化操作的私有／測試伺服器上使用。請勿用於連線官方伺服器或任何禁止自動化操作的線上服務，以免違反服務條款。</string>
+
+    <string name="notification_running">Orna Helper 正在背景執行</string>
+    <string name="stop">停止</string>
+
+    <string name="overlay_start">啟動</string>
+    <string name="overlay_stop">停止</string>
+    <string name="overlay_calibrate">校準</string>
+    <string name="overlay_close">關閉</string>
+    <string name="overlay_status_idle">閒置</string>
+
+    <string name="calib_step_hp_bar">步驟 1／7：框選「HP 血條」的區域（拖曳畫出矩形，請在 HP 滿血時框選）</string>
+    <string name="calib_step_mp_bar">步驟 2／7：框選「MP 魔力條」的區域（拖曳畫出矩形，請在 MP 滿值時框選）</string>
+    <string name="calib_step_enemy">步驟 3／7：框選畫面上用來判斷「是否有敵人／戰鬥中」的指示區域（請在沒有敵人時框選）</string>
+    <string name="calib_step_attack">步驟 4／7：點一下「攻擊」按鈕的位置</string>
+    <string name="calib_step_hp_potion">步驟 5／7：點一下「HP 藥水」按鈕的位置</string>
+    <string name="calib_step_mp_potion">步驟 6／7：點一下「MP 藥水」按鈕的位置</string>
+    <string name="calib_step_move">步驟 7／7（可跳過）：點一下用來「移動／尋找下個目標」的位置</string>
+    <string name="calib_btn_skip">跳過</string>
+    <string name="calib_btn_cancel">取消校準</string>
+    <string name="calib_toast_done">校準完成，設定已儲存</string>
+    <string name="calib_toast_cancelled">已取消校準</string>
+</resources>

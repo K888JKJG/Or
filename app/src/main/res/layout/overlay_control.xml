@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/overlay_panel_bg"
+    android:padding="8dp">
+
+    <TextView
+        android:id="@+id/overlay_drag_handle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="⠿ Orna Helper"
+        android:textColor="@color/overlay_text"
+        android:textSize="11sp"
+        android:padding="4dp" />
+
+    <TextView
+        android:id="@+id/overlay_status_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/overlay_status_idle"
+        android:textColor="@color/overlay_text"
+        android:textSize="12sp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="4dp" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/overlay_btn_toggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:textSize="11sp"
+            android:padding="6dp"
+            android:text="@string/overlay_start" />
+
+        <Button
+            android:id="@+id/overlay_btn_calibrate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:textSize="11sp"
+            android:padding="6dp"
+            android:text="@string/overlay_calibrate" />
+
+        <Button
+            android:id="@+id/overlay_btn_close"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:textSize="11sp"
+            android:padding="6dp"
+            android:text="@string/overlay_close" />
+
+    </LinearLayout>
+</LinearLayout>
