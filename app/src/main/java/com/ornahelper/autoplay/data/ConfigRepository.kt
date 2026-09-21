@@ -26,43 +26,45 @@ class ConfigRepository(context: Context) {
     }
 
     private fun toJson(c: BotConfig): JSONObject = JSONObject().apply {
-        put("hpBar", c.hpBar?.toJson())
-        put("mpBar", c.mpBar?.toJson())
-        put("enemyIndicator", c.enemyIndicator?.toJson())
-        put("attackButton", c.attackButton?.toJson())
-        put("hpPotionButton", c.hpPotionButton?.toJson())
-        put("mpPotionButton", c.mpPotionButton?.toJson())
-        put("moveTapPoint", c.moveTapPoint?.toJson())
-        put("hpThresholdPercent", c.hpThresholdPercent)
-        put("mpThresholdPercent", c.mpThresholdPercent)
+        put("monsterSpawnArea", c.monsterSpawnArea?.toJson())
+        put("mapAnchor", c.mapAnchor?.toJson())
+        put("confirmButton", c.confirmButton?.toJson())
+        put("battleAttackSlot", c.battleAttackSlot?.toJson())
+        put("resultContinueButton", c.resultContinueButton?.toJson())
+        put("itemsButton", c.itemsButton?.toJson())
         put("tickIntervalMs", c.tickIntervalMs)
-        put("potionCooldownMs", c.potionCooldownMs)
-        put("attackTapIntervalMs", c.attackTapIntervalMs)
-        put("idleMoveIntervalMs", c.idleMoveIntervalMs)
+        put("mapTapCooldownMs", c.mapTapCooldownMs)
+        put("confirmTapCooldownMs", c.confirmTapCooldownMs)
+        put("battleTapIntervalMs", c.battleTapIntervalMs)
+        put("continueTapCooldownMs", c.continueTapCooldownMs)
+        put("itemsLongPressMs", c.itemsLongPressMs)
+        put("itemsRecoveryIntervalMs", c.itemsRecoveryIntervalMs)
         put("maxRuntimeMinutes", c.maxRuntimeMinutes)
-        put("colorTolerance", c.colorTolerance)
-        put("enemyPresentTolerance", c.enemyPresentTolerance)
+        put("stateAnchorTolerance", c.stateAnchorTolerance)
+        put("monsterColorTolerance", c.monsterColorTolerance)
+        put("minMonsterMatchedSamples", c.minMonsterMatchedSamples)
     }
 
     private fun fromJson(o: JSONObject): BotConfig {
         val defaults = BotConfig()
         return BotConfig(
-            hpBar = o.optRegionOrNull("hpBar"),
-            mpBar = o.optRegionOrNull("mpBar"),
-            enemyIndicator = o.optRegionOrNull("enemyIndicator"),
-            attackButton = o.optPointOrNull("attackButton"),
-            hpPotionButton = o.optPointOrNull("hpPotionButton"),
-            mpPotionButton = o.optPointOrNull("mpPotionButton"),
-            moveTapPoint = o.optPointOrNull("moveTapPoint"),
-            hpThresholdPercent = o.optInt("hpThresholdPercent", defaults.hpThresholdPercent),
-            mpThresholdPercent = o.optInt("mpThresholdPercent", defaults.mpThresholdPercent),
+            monsterSpawnArea = o.optRegionOrNull("monsterSpawnArea"),
+            mapAnchor = o.optRegionOrNull("mapAnchor"),
+            confirmButton = o.optButtonOrNull("confirmButton"),
+            battleAttackSlot = o.optButtonOrNull("battleAttackSlot"),
+            resultContinueButton = o.optButtonOrNull("resultContinueButton"),
+            itemsButton = o.optButtonOrNull("itemsButton"),
             tickIntervalMs = o.optLong("tickIntervalMs", defaults.tickIntervalMs),
-            potionCooldownMs = o.optLong("potionCooldownMs", defaults.potionCooldownMs),
-            attackTapIntervalMs = o.optLong("attackTapIntervalMs", defaults.attackTapIntervalMs),
-            idleMoveIntervalMs = o.optLong("idleMoveIntervalMs", defaults.idleMoveIntervalMs),
+            mapTapCooldownMs = o.optLong("mapTapCooldownMs", defaults.mapTapCooldownMs),
+            confirmTapCooldownMs = o.optLong("confirmTapCooldownMs", defaults.confirmTapCooldownMs),
+            battleTapIntervalMs = o.optLong("battleTapIntervalMs", defaults.battleTapIntervalMs),
+            continueTapCooldownMs = o.optLong("continueTapCooldownMs", defaults.continueTapCooldownMs),
+            itemsLongPressMs = o.optLong("itemsLongPressMs", defaults.itemsLongPressMs),
+            itemsRecoveryIntervalMs = o.optLong("itemsRecoveryIntervalMs", defaults.itemsRecoveryIntervalMs),
             maxRuntimeMinutes = o.optInt("maxRuntimeMinutes", defaults.maxRuntimeMinutes),
-            colorTolerance = o.optInt("colorTolerance", defaults.colorTolerance),
-            enemyPresentTolerance = o.optInt("enemyPresentTolerance", defaults.enemyPresentTolerance)
+            stateAnchorTolerance = o.optInt("stateAnchorTolerance", defaults.stateAnchorTolerance),
+            monsterColorTolerance = o.optInt("monsterColorTolerance", defaults.monsterColorTolerance),
+            minMonsterMatchedSamples = o.optInt("minMonsterMatchedSamples", defaults.minMonsterMatchedSamples)
         )
     }
 
@@ -77,6 +79,11 @@ class ConfigRepository(context: Context) {
     private fun CalibratedRegion.toJson(): JSONObject = JSONObject().apply {
         put("rect", rect.toJson())
         put("referenceColor", referenceColor)
+    }
+
+    private fun CalibratedButton.toJson(): JSONObject = JSONObject().apply {
+        put("point", point.toJson())
+        put("anchor", anchor.toJson())
     }
 
     private fun JSONObject.optPointOrNull(key: String): TapPoint? {
@@ -94,6 +101,13 @@ class ConfigRepository(context: Context) {
         val rect = o.optRectOrNull("rect") ?: return null
         val color = o.optInt("referenceColor")
         return CalibratedRegion(rect, color)
+    }
+
+    private fun JSONObject.optButtonOrNull(key: String): CalibratedButton? {
+        val o = optJSONObject(key) ?: return null
+        val point = o.optPointOrNull("point") ?: return null
+        val anchor = o.optRegionOrNull("anchor") ?: return null
+        return CalibratedButton(point, anchor)
     }
 
     companion object {

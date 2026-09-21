@@ -36,14 +36,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var textAccessibilityStatus: TextView
     private lateinit var textServiceStatus: TextView
 
-    private lateinit var textHpThreshold: TextView
-    private lateinit var textMpThreshold: TextView
     private lateinit var textTickInterval: TextView
+    private lateinit var textItemsRecoveryInterval: TextView
     private lateinit var textMaxRuntime: TextView
 
-    private lateinit var seekHpThreshold: SeekBar
-    private lateinit var seekMpThreshold: SeekBar
     private lateinit var seekTickInterval: SeekBar
+    private lateinit var seekItemsRecoveryInterval: SeekBar
     private lateinit var seekMaxRuntime: SeekBar
 
     private val overlayPermissionLauncher =
@@ -89,14 +87,12 @@ class MainActivity : AppCompatActivity() {
         textAccessibilityStatus = findViewById(R.id.text_accessibility_status)
         textServiceStatus = findViewById(R.id.text_service_status)
 
-        textHpThreshold = findViewById(R.id.text_hp_threshold)
-        textMpThreshold = findViewById(R.id.text_mp_threshold)
         textTickInterval = findViewById(R.id.text_tick_interval)
+        textItemsRecoveryInterval = findViewById(R.id.text_items_recovery_interval)
         textMaxRuntime = findViewById(R.id.text_max_runtime)
 
-        seekHpThreshold = findViewById(R.id.seek_hp_threshold)
-        seekMpThreshold = findViewById(R.id.seek_mp_threshold)
         seekTickInterval = findViewById(R.id.seek_tick_interval)
+        seekItemsRecoveryInterval = findViewById(R.id.seek_items_recovery_interval)
         seekMaxRuntime = findViewById(R.id.seek_max_runtime)
     }
 
@@ -108,9 +104,8 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btn_save_config).setOnClickListener { saveConfigFromUi() }
         findViewById<Button>(R.id.btn_toggle_bot).setOnClickListener { toggleBot() }
 
-        seekHpThreshold.setOnSeekBarChangeListener(labelUpdater { textHpThreshold.text = getString(R.string.label_hp_threshold, it) })
-        seekMpThreshold.setOnSeekBarChangeListener(labelUpdater { textMpThreshold.text = getString(R.string.label_mp_threshold, it) })
         seekTickInterval.setOnSeekBarChangeListener(labelUpdater { textTickInterval.text = getString(R.string.label_tick_interval, it) })
+        seekItemsRecoveryInterval.setOnSeekBarChangeListener(labelUpdater { textItemsRecoveryInterval.text = getString(R.string.label_items_recovery_interval, it) })
         seekMaxRuntime.setOnSeekBarChangeListener(labelUpdater { textMaxRuntime.text = getString(R.string.label_max_runtime, it) })
     }
 
@@ -122,22 +117,19 @@ class MainActivity : AppCompatActivity() {
 
     private fun refreshConfigUi() {
         val cfg = configRepository.load()
-        seekHpThreshold.progress = cfg.hpThresholdPercent
-        seekMpThreshold.progress = cfg.mpThresholdPercent
         seekTickInterval.progress = cfg.tickIntervalMs.toInt()
+        seekItemsRecoveryInterval.progress = cfg.itemsRecoveryIntervalMs.toInt()
         seekMaxRuntime.progress = cfg.maxRuntimeMinutes
 
-        textHpThreshold.text = getString(R.string.label_hp_threshold, cfg.hpThresholdPercent)
-        textMpThreshold.text = getString(R.string.label_mp_threshold, cfg.mpThresholdPercent)
         textTickInterval.text = getString(R.string.label_tick_interval, cfg.tickIntervalMs.toInt())
+        textItemsRecoveryInterval.text = getString(R.string.label_items_recovery_interval, cfg.itemsRecoveryIntervalMs.toInt())
         textMaxRuntime.text = getString(R.string.label_max_runtime, cfg.maxRuntimeMinutes)
     }
 
     private fun saveConfigFromUi() {
         val cfg = configRepository.load()
-        cfg.hpThresholdPercent = seekHpThreshold.progress
-        cfg.mpThresholdPercent = seekMpThreshold.progress
         cfg.tickIntervalMs = seekTickInterval.progress.coerceAtLeast(100).toLong()
+        cfg.itemsRecoveryIntervalMs = seekItemsRecoveryInterval.progress.coerceAtLeast(1000).toLong()
         cfg.maxRuntimeMinutes = seekMaxRuntime.progress
         configRepository.save(cfg)
         Toast.makeText(this, "設定已儲存", Toast.LENGTH_SHORT).show()

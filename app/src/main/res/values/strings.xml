@@ -18,9 +18,8 @@
     <string name="calibration_hint">校準前請先切到遊戲畫面，服務啟動後懸浮控制面板會出現在畫面上，點擊「校準」即可開始。</string>
 
     <string name="section_thresholds">3. 閾值設定</string>
-    <string name="label_hp_threshold">HP 低於多少百分比自動喝藥：%1$d%%</string>
-    <string name="label_mp_threshold">MP 低於多少百分比自動喝藥：%1$d%%</string>
     <string name="label_tick_interval">偵測間隔（毫秒）：%1$d</string>
+    <string name="label_items_recovery_interval">自動回復物品間隔（毫秒）：%1$d</string>
     <string name="label_max_runtime">最長執行時間（分鐘，0＝不限制）：%1$d</string>
     <string name="btn_save_config">儲存設定</string>
 
@@ -40,13 +39,12 @@
     <string name="overlay_close">關閉</string>
     <string name="overlay_status_idle">閒置</string>
 
-    <string name="calib_step_hp_bar">步驟 1／7：框選「HP 血條」的區域（拖曳畫出矩形，請在 HP 滿血時框選）</string>
-    <string name="calib_step_mp_bar">步驟 2／7：框選「MP 魔力條」的區域（拖曳畫出矩形，請在 MP 滿值時框選）</string>
-    <string name="calib_step_enemy">步驟 3／7：框選畫面上用來判斷「是否有敵人／戰鬥中」的指示區域（請在沒有敵人時框選）</string>
-    <string name="calib_step_attack">步驟 4／7：點一下「攻擊」按鈕的位置</string>
-    <string name="calib_step_hp_potion">步驟 5／7：點一下「HP 藥水」按鈕的位置</string>
-    <string name="calib_step_mp_potion">步驟 6／7：點一下「MP 藥水」按鈕的位置</string>
-    <string name="calib_step_move">步驟 7／7（可跳過）：點一下用來「移動／尋找下個目標」的位置</string>
+    <string name="calib_step_spawn_area">步驟 1／6：在主畫面上，拖曳框選怪物出現的區域（畫面中央那個橢圓範圍），盡量框選怪物較少或沒有怪物的時候</string>
+    <string name="calib_step_map_anchor">步驟 2／6：框選主畫面上一個「只有在主畫面才會出現」的固定小區域（例如左上角圖示），用來判斷目前是否在主畫面</string>
+    <string name="calib_step_confirm_button">步驟 3／6：點選怪物後會出現確認介面，請點一下綠色「戰鬥」按鈕的位置</string>
+    <string name="calib_step_battle_slot">步驟 4／6：進入戰鬥畫面後，點一下下方六個欄位中「左上」那一格的位置</string>
+    <string name="calib_step_continue_button">步驟 5／6：戰鬥結束後的結算畫面，請點一下綠色「繼續」按鈕的位置</string>
+    <string name="calib_step_items_button">步驟 6／6：回到主畫面，點一下下方「物品」按鈕的位置（用於自動長按 3 秒回復狀態）</string>
     <string name="calib_btn_skip">跳過</string>
     <string name="calib_btn_cancel">取消校準</string>
     <string name="calib_toast_done">校準完成，設定已儲存</string>

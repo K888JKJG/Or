@@ -33,11 +33,12 @@ import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import com.ornahelper.autoplay.R
 import com.ornahelper.autoplay.data.BotConfig
+import com.ornahelper.autoplay.data.BotState
 import com.ornahelper.autoplay.data.BotStatus
+import com.ornahelper.autoplay.data.CalibratedButton
 import com.ornahelper.autoplay.data.CalibratedRegion
 import com.ornahelper.autoplay.data.CalibrationStep
 import com.ornahelper.autoplay.data.ConfigRepository
-import com.ornahelper.autoplay.data.TapPoint
 import com.ornahelper.autoplay.engine.BotEngine
 import com.ornahelper.autoplay.ui.CalibrationOverlayView
 
@@ -86,6 +87,7 @@ class OrnaBotService : Service() {
             configProvider = { configRepository.load() },
             frameProvider = { synchronized(bitmapLock) { latestBitmap } },
             tapper = { x, y -> OrnaAccessibilityService.tap(x, y) },
+            longPresser = { x, y, durationMs -> OrnaAccessibilityService.longPress(x, y, durationMs) },
             onStatus = { status -> mainHandler.post { updateStatusUi(status) } }
         )
     }
@@ -261,10 +263,14 @@ class OrnaBotService : Service() {
     }
 
     private fun updateStatusUi(status: BotStatus) {
-        val hpText = if (status.hpPercent >= 0) "HP ${status.hpPercent}%" else "HP --"
-        val mpText = if (status.mpPercent >= 0) "MP ${status.mpPercent}%" else "MP --"
-        val stateText = if (status.enemyPresent) "戰鬥中" else "搜尋中"
-        overlayStatusText?.text = "$hpText  $mpText  $stateText"
+        val stateText = when (status.state) {
+            BotState.MAP -> "地圖：尋找怪物中"
+            BotState.CONFIRM -> "確認戰鬥"
+            BotState.BATTLE -> "戰鬥中"
+            BotState.RESULT -> "結算畫面"
+            BotState.UNKNOWN -> "辨識中…"
+        }
+        overlayStatusText?.text = stateText
         updateToggleButtonLabel()
     }
 
@@ -296,8 +302,8 @@ class OrnaBotService : Service() {
                 advanceCalibrationStep()
             }
 
-            override fun onPointCaptured(point: TapPoint) {
-                applyCalibrationPoint(calibrationSteps[calibrationIndex], point)
+            override fun onButtonCaptured(button: CalibratedButton) {
+                applyCalibrationButton(calibrationSteps[calibrationIndex], button)
                 advanceCalibrationStep()
             }
         }
@@ -322,19 +328,18 @@ class OrnaBotService : Service() {
 
     private fun applyCalibrationRegion(step: CalibrationStep, region: CalibratedRegion) {
         when (step) {
-            CalibrationStep.HP_BAR -> workingConfig.hpBar = region
-            CalibrationStep.MP_BAR -> workingConfig.mpBar = region
-            CalibrationStep.ENEMY_INDICATOR -> workingConfig.enemyIndicator = region
+            CalibrationStep.MONSTER_SPAWN_AREA -> workingConfig.monsterSpawnArea = region
+            CalibrationStep.MAP_ANCHOR -> workingConfig.mapAnchor = region
             else -> Unit
         }
     }
 
-    private fun applyCalibrationPoint(step: CalibrationStep, point: TapPoint) {
+    private fun applyCalibrationButton(step: CalibrationStep, button: CalibratedButton) {
         when (step) {
-            CalibrationStep.ATTACK_BUTTON -> workingConfig.attackButton = point
-            CalibrationStep.HP_POTION_BUTTON -> workingConfig.hpPotionButton = point
-            CalibrationStep.MP_POTION_BUTTON -> workingConfig.mpPotionButton = point
-            CalibrationStep.MOVE_POINT -> workingConfig.moveTapPoint = point
+            CalibrationStep.CONFIRM_BUTTON -> workingConfig.confirmButton = button
+            CalibrationStep.BATTLE_ATTACK_SLOT -> workingConfig.battleAttackSlot = button
+            CalibrationStep.RESULT_CONTINUE_BUTTON -> workingConfig.resultContinueButton = button
+            CalibrationStep.ITEMS_BUTTON -> workingConfig.itemsButton = button
             else -> Unit
         }
     }
@@ -366,13 +371,12 @@ class OrnaBotService : Service() {
 
     private fun instructionFor(step: CalibrationStep): String = getString(
         when (step) {
-            CalibrationStep.HP_BAR -> R.string.calib_step_hp_bar
-            CalibrationStep.MP_BAR -> R.string.calib_step_mp_bar
-            CalibrationStep.ENEMY_INDICATOR -> R.string.calib_step_enemy
-            CalibrationStep.ATTACK_BUTTON -> R.string.calib_step_attack
-            CalibrationStep.HP_POTION_BUTTON -> R.string.calib_step_hp_potion
-            CalibrationStep.MP_POTION_BUTTON -> R.string.calib_step_mp_potion
-            CalibrationStep.MOVE_POINT -> R.string.calib_step_move
+            CalibrationStep.MONSTER_SPAWN_AREA -> R.string.calib_step_spawn_area
+            CalibrationStep.MAP_ANCHOR -> R.string.calib_step_map_anchor
+            CalibrationStep.CONFIRM_BUTTON -> R.string.calib_step_confirm_button
+            CalibrationStep.BATTLE_ATTACK_SLOT -> R.string.calib_step_battle_slot
+            CalibrationStep.RESULT_CONTINUE_BUTTON -> R.string.calib_step_continue_button
+            CalibrationStep.ITEMS_BUTTON -> R.string.calib_step_items_button
         }
     )
 

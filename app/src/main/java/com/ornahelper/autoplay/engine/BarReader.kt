@@ -4,38 +4,16 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import com.ornahelper.autoplay.data.CalibratedRegion
 import com.ornahelper.autoplay.data.ScreenRect
+import com.ornahelper.autoplay.data.TapPoint
 import kotlin.math.sqrt
 
 /**
  * Reads calibrated screen regions from a captured frame using simple color matching.
  * No OCR / template matching — just color-distance comparisons against a reference
  * color sampled during calibration. This keeps the bot lightweight and fast enough
- * to run every tick, at the cost of needing a distinct color for filled vs. empty bars.
+ * to run every tick.
  */
 object BarReader {
-
-    /**
-     * Percentage (0-100) of the bar's midline whose pixels match [region]'s reference
-     * (filled) color, scanning the whole width. Returns -1 if the region is invalid
-     * or out of bounds.
-     */
-    fun readBarPercent(bitmap: Bitmap, region: CalibratedRegion, tolerance: Int): Int {
-        val r = region.rect
-        if (r.width <= 1 || r.height <= 0) return -1
-        val y = ((r.top + r.bottom) / 2).coerceIn(0, bitmap.height - 1)
-        val left = r.left.coerceIn(0, bitmap.width - 1)
-        val right = r.right.coerceIn(left + 1, bitmap.width)
-
-        var matched = 0
-        var sampled = 0
-        for (x in left until right) {
-            sampled++
-            val px = bitmap.getPixel(x, y)
-            if (colorDistance(px, region.referenceColor) <= tolerance) matched++
-        }
-        if (sampled == 0) return -1
-        return (matched * 100 / sampled).coerceIn(0, 100)
-    }
 
     /** True if the region's average color is still close to its calibrated reference color. */
     fun regionMatchesReference(bitmap: Bitmap, region: CalibratedRegion, tolerance: Int): Boolean {
@@ -43,7 +21,13 @@ object BarReader {
         return colorDistance(avg, region.referenceColor) <= tolerance
     }
 
-    /** Samples the average color across a grid inside [rect]; used during calibration. */
+    /** Distance between [region]'s live average color and its calibrated reference, or null if out of bounds. */
+    fun regionColorDistance(bitmap: Bitmap, region: CalibratedRegion): Int? {
+        val avg = averageColor(bitmap, region.rect) ?: return null
+        return colorDistance(avg, region.referenceColor)
+    }
+
+    /** Samples the average color across a grid inside [rect]; used during calibration and state checks. */
     fun averageColor(bitmap: Bitmap, rect: ScreenRect): Int? {
         val left = rect.left.coerceIn(0, bitmap.width - 1)
         val top = rect.top.coerceIn(0, bitmap.height - 1)
@@ -75,7 +59,50 @@ object BarReader {
         return Color.rgb((rSum / count).toInt(), (gSum / count).toInt(), (bSum / count).toInt())
     }
 
-    private fun colorDistance(a: Int, b: Int): Int {
+    /**
+     * Scans [region] on a coarse grid for pixels that differ from its reference (background)
+     * color by more than [tolerance] — i.e. a monster standing on an otherwise empty spawn
+     * area — and returns the centroid of every such pixel. Returns null if fewer than
+     * [minMatchedSamples] pixels matched (nothing there worth tapping).
+     */
+    fun findForegroundCentroid(
+        bitmap: Bitmap,
+        region: CalibratedRegion,
+        tolerance: Int,
+        minMatchedSamples: Int
+    ): TapPoint? {
+        val r = region.rect
+        val left = r.left.coerceIn(0, bitmap.width - 1)
+        val top = r.top.coerceIn(0, bitmap.height - 1)
+        val right = r.right.coerceIn(left + 1, bitmap.width)
+        val bottom = r.bottom.coerceIn(top + 1, bitmap.height)
+        if (right <= left || bottom <= top) return null
+
+        val stepX = maxOf(1, (right - left) / 80)
+        val stepY = maxOf(1, (bottom - top) / 80)
+
+        var sumX = 0L
+        var sumY = 0L
+        var matched = 0
+        var y = top
+        while (y < bottom) {
+            var x = left
+            while (x < right) {
+                val px = bitmap.getPixel(x, y)
+                if (colorDistance(px, region.referenceColor) > tolerance) {
+                    sumX += x
+                    sumY += y
+                    matched++
+                }
+                x += stepX
+            }
+            y += stepY
+        }
+        if (matched < minMatchedSamples) return null
+        return TapPoint((sumX / matched).toInt(), (sumY / matched).toInt())
+    }
+
+    fun colorDistance(a: Int, b: Int): Int {
         val dr = Color.red(a) - Color.red(b)
         val dg = Color.green(a) - Color.green(b)
         val db = Color.blue(a) - Color.blue(b)

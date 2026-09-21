@@ -36,6 +36,14 @@ class OrnaAccessibilityService : AccessibilityService() {
         return dispatchGesture(gesture, null, null)
     }
 
+    /** Holds a single finger down at (x, y) for [durationMs] — used for long-press actions. */
+    fun performLongPress(x: Int, y: Int, durationMs: Long): Boolean {
+        val path = Path().apply { moveTo(x.toFloat(), y.toFloat()) }
+        val stroke = GestureDescription.StrokeDescription(path, 0, durationMs.coerceAtLeast(1L))
+        val gesture = GestureDescription.Builder().addStroke(stroke).build()
+        return dispatchGesture(gesture, null, null)
+    }
+
     companion object {
         private const val TAP_DURATION_MS = 40L
 
@@ -46,5 +54,9 @@ class OrnaAccessibilityService : AccessibilityService() {
 
         /** Returns true if a tap gesture was successfully dispatched (service must be enabled). */
         fun tap(x: Int, y: Int): Boolean = instance?.performTap(x, y) ?: false
+
+        /** Returns true if a long-press gesture was successfully dispatched (service must be enabled). */
+        fun longPress(x: Int, y: Int, durationMs: Long): Boolean =
+            instance?.performLongPress(x, y, durationMs) ?: false
     }
 }

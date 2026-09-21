@@ -11,6 +11,7 @@ import android.view.MotionEvent
 import android.view.View
 import androidx.core.content.ContextCompat
 import com.ornahelper.autoplay.R
+import com.ornahelper.autoplay.data.CalibratedButton
 import com.ornahelper.autoplay.data.CalibratedRegion
 import com.ornahelper.autoplay.data.CalibrationStep
 import com.ornahelper.autoplay.data.ScreenRect
@@ -37,13 +38,13 @@ class CalibrationOverlayView @JvmOverloads constructor(
 
     interface Listener {
         fun onRegionCaptured(region: CalibratedRegion)
-        fun onPointCaptured(point: TapPoint)
+        fun onButtonCaptured(button: CalibratedButton)
     }
 
     var listener: Listener? = null
     var frameProvider: (() -> Bitmap?)? = null
 
-    var currentStep: CalibrationStep = CalibrationStep.HP_BAR
+    var currentStep: CalibrationStep = CalibrationStep.MONSTER_SPAWN_AREA
         set(value) {
             field = value
             dragRect = null
@@ -131,11 +132,16 @@ class CalibrationOverlayView @JvmOverloads constructor(
             val color = frame?.let { BarReader.averageColor(it, rect) } ?: Color.WHITE
             listener?.onRegionCaptured(CalibratedRegion(rect, color))
         } else {
-            listener?.onPointCaptured(TapPoint(x1.toInt(), y1.toInt()))
+            val point = TapPoint(x1.toInt(), y1.toInt())
+            val anchorRect = ScreenRect.around(point, ANCHOR_HALF_SIZE_PX)
+            val frame = frameProvider?.invoke()
+            val anchorColor = frame?.let { BarReader.averageColor(it, anchorRect) } ?: Color.WHITE
+            listener?.onButtonCaptured(CalibratedButton(point, CalibratedRegion(anchorRect, anchorColor)))
         }
     }
 
     companion object {
         private const val MIN_DRAG_DISTANCE_PX = 20
+        private const val ANCHOR_HALF_SIZE_PX = 30
     }
 }

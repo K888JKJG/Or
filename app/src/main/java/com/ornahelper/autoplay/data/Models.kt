@@ -14,53 +14,74 @@ data class ScreenRect(val left: Int, val top: Int, val right: Int, val bottom: I
         right = maxOf(left, right),
         bottom = maxOf(top, bottom)
     )
+
+    companion object {
+        /** A small box centered on [point], used to sample a color "signature" for a tapped button. */
+        fun around(point: TapPoint, halfSize: Int): ScreenRect = ScreenRect(
+            point.x - halfSize, point.y - halfSize, point.x + halfSize, point.y + halfSize
+        )
+    }
 }
 
-/** A calibrated region: where to look, and what color/tone means "full" or "present". */
+/** A calibrated region: where to look, and what color it should be. */
 data class CalibratedRegion(val rect: ScreenRect, val referenceColor: Int)
+
+/**
+ * A tappable point plus a small sampled color region around it. The anchor doubles as a
+ * "signature" for whichever screen this button lives on: if the live frame's color at that
+ * same spot matches the anchor, that screen is very likely the one currently showing.
+ */
+data class CalibratedButton(val point: TapPoint, val anchor: CalibratedRegion)
+
+/** Which of the four game screens the bot currently believes it is looking at. */
+enum class BotState { UNKNOWN, MAP, CONFIRM, BATTLE, RESULT }
 
 /**
  * All settings needed to run the bot loop. Every calibrated field is nullable so the
  * bot only acts on what has actually been calibrated.
+ *
+ * The loop this drives: on the map screen, find a monster in [monsterSpawnArea] and tap it;
+ * on the confirm screen, tap [confirmButton]; on the battle screen, repeatedly tap
+ * [battleAttackSlot]; on the result screen, tap [resultContinueButton] to go back to the map.
+ * [itemsButton] is long-pressed periodically while on the map to auto-recover HP/MP.
  */
 data class BotConfig(
-    var hpBar: CalibratedRegion? = null,
-    var mpBar: CalibratedRegion? = null,
-    var enemyIndicator: CalibratedRegion? = null,
-    var attackButton: TapPoint? = null,
-    var hpPotionButton: TapPoint? = null,
-    var mpPotionButton: TapPoint? = null,
-    var moveTapPoint: TapPoint? = null,
+    var monsterSpawnArea: CalibratedRegion? = null,
+    var mapAnchor: CalibratedRegion? = null,
+    var confirmButton: CalibratedButton? = null,
+    var battleAttackSlot: CalibratedButton? = null,
+    var resultContinueButton: CalibratedButton? = null,
+    var itemsButton: CalibratedButton? = null,
 
-    var hpThresholdPercent: Int = 50,
-    var mpThresholdPercent: Int = 30,
-    var tickIntervalMs: Long = 500,
-    var potionCooldownMs: Long = 2000,
-    var attackTapIntervalMs: Long = 800,
-    var idleMoveIntervalMs: Long = 1500,
+    var tickIntervalMs: Long = 400,
+    var mapTapCooldownMs: Long = 1200,
+    var confirmTapCooldownMs: Long = 800,
+    var battleTapIntervalMs: Long = 350,
+    var continueTapCooldownMs: Long = 800,
+    var itemsLongPressMs: Long = 3000,
+    var itemsRecoveryIntervalMs: Long = 20_000,
     var maxRuntimeMinutes: Int = 0,
 
-    var colorTolerance: Int = 40,
-    var enemyPresentTolerance: Int = 30
+    var stateAnchorTolerance: Int = 40,
+    var monsterColorTolerance: Int = 60,
+    var minMonsterMatchedSamples: Int = 15
 ) {
     val isCombatReady: Boolean
-        get() = attackButton != null
+        get() = monsterSpawnArea != null && mapAnchor != null && confirmButton != null &&
+            battleAttackSlot != null && resultContinueButton != null
 }
 
 data class BotStatus(
     val running: Boolean,
-    val hpPercent: Int,
-    val mpPercent: Int,
-    val enemyPresent: Boolean,
+    val state: BotState,
     val lastFrameAt: Long
 )
 
-enum class CalibrationStep(val isRect: Boolean, val isOptional: Boolean = false) {
-    HP_BAR(isRect = true),
-    MP_BAR(isRect = true),
-    ENEMY_INDICATOR(isRect = true),
-    ATTACK_BUTTON(isRect = false),
-    HP_POTION_BUTTON(isRect = false),
-    MP_POTION_BUTTON(isRect = false),
-    MOVE_POINT(isRect = false, isOptional = true)
+enum class CalibrationStep(val isRect: Boolean) {
+    MONSTER_SPAWN_AREA(isRect = true),
+    MAP_ANCHOR(isRect = true),
+    CONFIRM_BUTTON(isRect = false),
+    BATTLE_ATTACK_SLOT(isRect = false),
+    RESULT_CONTINUE_BUTTON(isRect = false),
+    ITEMS_BUTTON(isRect = false)
 }
